@@ -2,7 +2,7 @@
 
 client_id = "04e0890327bd5ba6375fa4e9e71466a6"
 name = "Mood Quizz Analytics"
-application_url = "https://example.com"
+application_url = "https://mood-quizz-analytics.vercel.app"
 embedded = true
 
 [build]

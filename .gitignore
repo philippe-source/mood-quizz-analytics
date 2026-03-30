@@ -13,10 +13,12 @@ node_modules
 /prisma/dev.sqlite-journal
 database.sqlite
 
+node_modules
 .env
 .env.*
-
-
+.next
+dist
+build
 
 
 
