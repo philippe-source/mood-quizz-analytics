@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
+  Badge,
   BlockStack,
-  Box,
+  Button,
   Card,
   InlineStack,
   Page,
@@ -11,11 +12,13 @@ import {
 } from "@shopify/polaris";
 
 type SubmissionRow = {
+  id: string;
   firstname: string | null;
   lastname: string | null;
   email: string | null;
   total_score: number | null;
   score_segment: string | null;
+  selected: boolean;
   q12: string | null;
   q15: string | null;
 };
@@ -32,14 +35,16 @@ function truncate(text: string | null | undefined, max = 120) {
 export default function ResponsesPage() {
   const [search, setSearch] = useState("");
   const [segment, setSegment] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("");
   const [rows, setRows] = useState<SubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function loadRows() {
     const params = new URLSearchParams();
 
     if (search) params.set("search", search);
     if (segment) params.set("segment", segment);
+    if (selectedFilter) params.set("selected", selectedFilter);
 
     setLoading(true);
 
@@ -55,7 +60,41 @@ export default function ResponsesPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [search, segment]);
+  }
+
+  useEffect(() => {
+    loadRows();
+  }, [search, segment, selectedFilter]);
+
+  async function toggleSelection(id: string, selected: boolean) {
+    try {
+      const response = await fetch("/app/api/selection", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          selected: !selected,
+        }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        console.error(json);
+        return;
+      }
+
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === id ? { ...row, selected: !selected } : row,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to update selection:", error);
+    }
+  }
 
   return (
     <Page title="Réponses du quiz">
@@ -88,6 +127,19 @@ export default function ResponsesPage() {
                 onChange={setSegment}
               />
             </div>
+
+            <div style={{ minWidth: 220 }}>
+              <Select
+                label="Sélection"
+                labelHidden
+                options={[
+                  { label: "Toutes", value: "" },
+                  { label: "Sélectionnées", value: "true" },
+                ]}
+                value={selectedFilter}
+                onChange={setSelectedFilter}
+              />
+            </div>
           </InlineStack>
         </Card>
 
@@ -110,7 +162,7 @@ export default function ResponsesPage() {
                 <table
                   style={{
                     width: "100%",
-                    minWidth: "1100px",
+                    minWidth: "1250px",
                     borderCollapse: "collapse",
                     fontSize: "14px",
                   }}
@@ -122,6 +174,8 @@ export default function ResponsesPage() {
                       <th style={thStyle}>Email</th>
                       <th style={thStyle}>Score</th>
                       <th style={thStyle}>Segment</th>
+                      <th style={thStyle}>Sélection</th>
+                      <th style={thStyle}>Action</th>
                       <th style={thStyle}>Q12</th>
                       <th style={thStyle}>Q15</th>
                     </tr>
@@ -129,7 +183,7 @@ export default function ResponsesPage() {
                   <tbody>
                     {rows.map((row, index) => (
                       <tr
-                        key={`${row.email || "row"}-${index}`}
+                        key={`${row.id}-${index}`}
                         style={{ borderBottom: "1px solid #f1f2f3" }}
                       >
                         <td style={tdStyle}>{row.firstname || ""}</td>
@@ -137,6 +191,21 @@ export default function ResponsesPage() {
                         <td style={tdStyle}>{row.email || ""}</td>
                         <td style={tdStyle}>{row.total_score ?? 0}</td>
                         <td style={tdStyle}>{row.score_segment || ""}</td>
+                        <td style={tdStyle}>
+                          {row.selected ? (
+                            <Badge tone="success">Sélectionnée</Badge>
+                          ) : (
+                            <Badge>TBD</Badge>
+                          )}
+                        </td>
+                        <td style={tdStyle}>
+                          <Button
+                            size="micro"
+                            onClick={() => toggleSelection(row.id, row.selected)}
+                          >
+                            {row.selected ? "Retirer" : "Sélectionner"}
+                          </Button>
+                        </td>
                         <td style={tdStyle} title={row.q12 || ""}>
                           {truncate(row.q12, 140)}
                         </td>

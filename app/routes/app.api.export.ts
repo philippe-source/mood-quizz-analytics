@@ -24,6 +24,7 @@ type ExportRow = {
   q13: string | null;
   q14: string | null;
   q15: string | null;
+  selected: boolean | null;
 };
 
 function csvEscape(value: unknown): string {
@@ -52,7 +53,8 @@ export async function loader({ request }: { request: Request }) {
       phone,
       total_score,
       score_segment,
-      q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15
+      q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15,
+      selected
     `)
     .eq("campaign_slug", "cercle-100-avril")
     .order("total_score", { ascending: false });
@@ -94,6 +96,7 @@ export async function loader({ request }: { request: Request }) {
     "q13",
     "q14",
     "q15",
+    "selected",
   ];
 
   const csv = [
