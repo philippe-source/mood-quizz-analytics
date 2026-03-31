@@ -96,9 +96,24 @@ export default function ResponsesPage() {
     }
   }
 
+  const selectedCount = rows.filter((row) => row.selected).length;
+
   return (
     <Page title="Réponses du quiz">
       <BlockStack gap="400">
+        <Card>
+          <InlineStack align="space-between" blockAlign="center">
+            <Text as="h3" variant="headingMd">
+              {selectedFilter === "true"
+                ? `${selectedCount} sélectionnées`
+                : `${selectedCount} sélectionnées dans la vue courante`}
+            </Text>
+            <Text as="p" tone="subdued">
+              Objectif : 100
+            </Text>
+          </InlineStack>
+        </Card>
+
         <Card>
           <InlineStack gap="300" wrap>
             <div style={{ minWidth: 280 }}>

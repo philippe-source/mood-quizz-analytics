@@ -7,6 +7,7 @@ type SubmissionSummaryRow = {
   q1: string | null;
   q2: string | null;
   q8: string | null;
+  selected: boolean | null;
   submitted_at: string;
 };
 
@@ -40,7 +41,7 @@ export async function loader({ request }: { request: Request }) {
 
   const { data, error } = await supabase
     .from("quiz_submissions")
-    .select("total_score, score_segment, q1, q2, q8, submitted_at")
+    .select("total_score, score_segment, q1, q2, q8, selected, submitted_at")
     .eq("campaign_slug", "cercle-100-avril");
 
   if (error) {
@@ -56,6 +57,8 @@ export async function loader({ request }: { request: Request }) {
           rows.reduce((sum, row) => sum + (row.total_score || 0), 0) / total,
         )
       : 0;
+
+  const selectedCount = rows.filter((row) => row.selected === true).length;
 
   const segments = {
     ULTRA_HIGH_VALUE: 0,
@@ -75,6 +78,8 @@ export async function loader({ request }: { request: Request }) {
   return Response.json({
     total,
     avgScore,
+    selectedCount,
+    remainingTo100: Math.max(100 - selectedCount, 0),
     segments,
     topQ1: countBy(rows, "q1"),
     topQ2: countBy(rows, "q2"),

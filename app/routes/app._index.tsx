@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Badge,
   BlockStack,
   Card,
   InlineGrid,
@@ -11,6 +12,8 @@ import {
 type SummaryResponse = {
   total: number;
   avgScore: number;
+  selectedCount: number;
+  remainingTo100: number;
   segments: {
     ULTRA_HIGH_VALUE: number;
     HIGH_POTENTIAL: number;
@@ -43,6 +46,20 @@ export default function DashboardPage() {
   return (
     <Page title="Mood Quiz Analytics">
       <BlockStack gap="500">
+        <Card>
+          <BlockStack gap="300">
+            <Text as="h2" variant="headingLg">
+              Sélection des 100
+            </Text>
+            <Text as="p" variant="heading2xl">
+              {loading ? "…" : data?.selectedCount ?? 0} / 100 sélectionnées
+            </Text>
+            <Text as="p" tone="subdued">
+              {loading ? "…" : data?.remainingTo100 ?? 100} restantes pour atteindre l’objectif.
+            </Text>
+          </BlockStack>
+        </Card>
+
         <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
           <Card>
             <BlockStack gap="200">
