@@ -3,7 +3,7 @@ import { BlockStack, Button, Card, Page, Tabs, Text } from "@shopify/polaris";
 
 const CAMPAIGNS = [
   { id: "cercle-100-avril", content: "Cercle 100 — Avril 2026", panelID: "cercle-100-avril" },
-  { id: "muses-de-mai-2026", content: "Muses de Mai 2026", panelID: "muses-de-mai-2026" },
+  { id: "muses-mai-2026", content: "Muses de Mai 2026", panelID: "muses-mai-2026" },
 ];
 
 async function downloadExport(campaign: string, mode: string) {
