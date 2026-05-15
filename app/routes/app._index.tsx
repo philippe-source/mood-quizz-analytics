@@ -6,8 +6,14 @@ import {
   InlineGrid,
   List,
   Page,
+  Tabs,
   Text,
 } from "@shopify/polaris";
+
+const CAMPAIGNS = [
+  { id: "cercle-100-avril", content: "Cercle 100 — Avril 2026", panelID: "cercle-100-avril" },
+  { id: "muses-de-mai-2026", content: "Muses de Mai 2026", panelID: "muses-de-mai-2026" },
+];
 
 type SummaryResponse = {
   total: number;
@@ -26,11 +32,16 @@ type SummaryResponse = {
 };
 
 export default function DashboardPage() {
+  const [campaignIndex, setCampaignIndex] = useState(0);
   const [data, setData] = useState<SummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const campaign = CAMPAIGNS[campaignIndex].id;
+
   useEffect(() => {
-    fetch("/app/api/summary")
+    setLoading(true);
+    setData(null);
+    fetch(`/app/api/summary?campaign=${campaign}`)
       .then((response) => response.json())
       .then((json) => {
         setData(json);
@@ -41,137 +52,141 @@ export default function DashboardPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [campaign]);
 
   return (
     <Page title="Mood Quiz Analytics">
       <BlockStack gap="500">
-        <Card>
-          <BlockStack gap="300">
-            <Text as="h2" variant="headingLg">
-              Sélection des 100
-            </Text>
-            <Text as="p" variant="heading2xl">
-              {loading ? "…" : data?.selectedCount ?? 0} / 100 sélectionnées
-            </Text>
-            <Text as="p" tone="subdued">
-              {loading ? "…" : data?.remainingTo100 ?? 100} restantes pour atteindre l’objectif.
-            </Text>
+        <Tabs tabs={CAMPAIGNS} selected={campaignIndex} onSelect={setCampaignIndex}>
+          <BlockStack gap="500">
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingLg">
+                  Sélection des 100
+                </Text>
+                <Text as="p" variant="heading2xl">
+                  {loading ? "…" : data?.selectedCount ?? 0} / 100 sélectionnées
+                </Text>
+                <Text as="p" tone="subdued">
+                  {loading ? "…" : data?.remainingTo100 ?? 100} restantes pour atteindre l'objectif.
+                </Text>
+              </BlockStack>
+            </Card>
+
+            <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    Candidatures
+                  </Text>
+                  <Text as="p" variant="heading2xl">
+                    {loading ? "…" : data?.total ?? 0}
+                  </Text>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    Score moyen
+                  </Text>
+                  <Text as="p" variant="heading2xl">
+                    {loading ? "…" : data?.avgScore ?? 0}
+                  </Text>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    Ultra high value
+                  </Text>
+                  <Text as="p" variant="heading2xl">
+                    {loading ? "…" : data?.segments?.ULTRA_HIGH_VALUE ?? 0}
+                  </Text>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    High potential
+                  </Text>
+                  <Text as="p" variant="heading2xl">
+                    {loading ? "…" : data?.segments?.HIGH_POTENTIAL ?? 0}
+                  </Text>
+                </BlockStack>
+              </Card>
+            </InlineGrid>
+
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h3" variant="headingMd">
+                  Répartition des segments
+                </Text>
+                <Text as="p">
+                  ULTRA HIGH VALUE: {loading ? "…" : data?.segments?.ULTRA_HIGH_VALUE ?? 0}
+                </Text>
+                <Text as="p">
+                  HIGH POTENTIAL: {loading ? "…" : data?.segments?.HIGH_POTENTIAL ?? 0}
+                </Text>
+                <Text as="p">
+                  MOYEN: {loading ? "…" : data?.segments?.MOYEN ?? 0}
+                </Text>
+                <Text as="p">
+                  FAIBLE: {loading ? "…" : data?.segments?.FAIBLE ?? 0}
+                </Text>
+              </BlockStack>
+            </Card>
+
+            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+              <Card>
+                <BlockStack gap="300">
+                  <Text as="h3" variant="headingMd">
+                    Top réponses Q1
+                  </Text>
+                  <List>
+                    {(data?.topQ1 ?? []).map((item) => (
+                      <List.Item key={item.label}>
+                        {item.label} — {item.value}
+                      </List.Item>
+                    ))}
+                  </List>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="300">
+                  <Text as="h3" variant="headingMd">
+                    Top réponses Q2
+                  </Text>
+                  <List>
+                    {(data?.topQ2 ?? []).map((item) => (
+                      <List.Item key={item.label}>
+                        {item.label} — {item.value}
+                      </List.Item>
+                    ))}
+                  </List>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="300">
+                  <Text as="h3" variant="headingMd">
+                    Top réponses Q8
+                  </Text>
+                  <List>
+                    {(data?.topQ8 ?? []).map((item) => (
+                      <List.Item key={item.label}>
+                        {item.label} — {item.value}
+                      </List.Item>
+                    ))}
+                  </List>
+                </BlockStack>
+              </Card>
+            </InlineGrid>
           </BlockStack>
-        </Card>
-
-        <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h3" variant="headingSm">
-                Candidatures
-              </Text>
-              <Text as="p" variant="heading2xl">
-                {loading ? "…" : data?.total ?? 0}
-              </Text>
-            </BlockStack>
-          </Card>
-
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h3" variant="headingSm">
-                Score moyen
-              </Text>
-              <Text as="p" variant="heading2xl">
-                {loading ? "…" : data?.avgScore ?? 0}
-              </Text>
-            </BlockStack>
-          </Card>
-
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h3" variant="headingSm">
-                Ultra high value
-              </Text>
-              <Text as="p" variant="heading2xl">
-                {loading ? "…" : data?.segments?.ULTRA_HIGH_VALUE ?? 0}
-              </Text>
-            </BlockStack>
-          </Card>
-
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h3" variant="headingSm">
-                High potential
-              </Text>
-              <Text as="p" variant="heading2xl">
-                {loading ? "…" : data?.segments?.HIGH_POTENTIAL ?? 0}
-              </Text>
-            </BlockStack>
-          </Card>
-        </InlineGrid>
-
-        <Card>
-          <BlockStack gap="300">
-            <Text as="h3" variant="headingMd">
-              Répartition des segments
-            </Text>
-            <Text as="p">
-              ULTRA HIGH VALUE: {loading ? "…" : data?.segments?.ULTRA_HIGH_VALUE ?? 0}
-            </Text>
-            <Text as="p">
-              HIGH POTENTIAL: {loading ? "…" : data?.segments?.HIGH_POTENTIAL ?? 0}
-            </Text>
-            <Text as="p">
-              MOYEN: {loading ? "…" : data?.segments?.MOYEN ?? 0}
-            </Text>
-            <Text as="p">
-              FAIBLE: {loading ? "…" : data?.segments?.FAIBLE ?? 0}
-            </Text>
-          </BlockStack>
-        </Card>
-
-        <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingMd">
-                Top réponses Q1
-              </Text>
-              <List>
-                {(data?.topQ1 ?? []).map((item) => (
-                  <List.Item key={item.label}>
-                    {item.label} — {item.value}
-                  </List.Item>
-                ))}
-              </List>
-            </BlockStack>
-          </Card>
-
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingMd">
-                Top réponses Q2
-              </Text>
-              <List>
-                {(data?.topQ2 ?? []).map((item) => (
-                  <List.Item key={item.label}>
-                    {item.label} — {item.value}
-                  </List.Item>
-                ))}
-              </List>
-            </BlockStack>
-          </Card>
-
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingMd">
-                Top réponses Q8
-              </Text>
-              <List>
-                {(data?.topQ8 ?? []).map((item) => (
-                  <List.Item key={item.label}>
-                    {item.label} — {item.value}
-                  </List.Item>
-                ))}
-              </List>
-            </BlockStack>
-          </Card>
-        </InlineGrid>
+        </Tabs>
       </BlockStack>
     </Page>
   );

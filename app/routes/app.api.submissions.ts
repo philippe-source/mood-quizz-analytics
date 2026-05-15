@@ -27,10 +27,12 @@ export async function loader({ request }: { request: Request }) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  const campaign = url.searchParams.get("campaign") || "cercle-100-avril";
+
   let query = supabase
     .from("quiz_submissions")
     .select("id, firstname, lastname, email, total_score, score_segment, selected, q12, q15, submitted_at")
-    .eq("campaign_slug", "cercle-100-avril")
+    .eq("campaign_slug", campaign)
     .order("submitted_at", { ascending: false });
 
   if (segment) {

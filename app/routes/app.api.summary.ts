@@ -39,10 +39,13 @@ export async function loader({ request }: { request: Request }) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  const url = new URL(request.url);
+  const campaign = url.searchParams.get("campaign") || "cercle-100-avril";
+
   const { data, error } = await supabase
     .from("quiz_submissions")
     .select("total_score, score_segment, q1, q2, q8, selected, submitted_at")
-    .eq("campaign_slug", "cercle-100-avril");
+    .eq("campaign_slug", campaign);
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });

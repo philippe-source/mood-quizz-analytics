@@ -37,6 +37,7 @@ export async function loader({ request }: { request: Request }) {
 
   const url = new URL(request.url);
   const mode = url.searchParams.get("mode") || "all";
+  const campaign = url.searchParams.get("campaign") || "cercle-100-avril";
 
   const supabase = createClient(
     process.env.SUPABASE_URL!,
@@ -56,7 +57,7 @@ export async function loader({ request }: { request: Request }) {
       q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15,
       selected
     `)
-    .eq("campaign_slug", "cercle-100-avril")
+    .eq("campaign_slug", campaign)
     .order("total_score", { ascending: false });
 
   if (error) {
@@ -111,7 +112,7 @@ export async function loader({ request }: { request: Request }) {
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="quiz-${mode}.csv"`,
+      "Content-Disposition": `attachment; filename="quiz-${campaign}-${mode}.csv"`,
     },
   });
 }

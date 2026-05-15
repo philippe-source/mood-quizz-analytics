@@ -7,9 +7,15 @@ import {
   InlineStack,
   Page,
   Select,
+  Tabs,
   Text,
   TextField,
 } from "@shopify/polaris";
+
+const CAMPAIGNS = [
+  { id: "cercle-100-avril", content: "Cercle 100 — Avril 2026", panelID: "cercle-100-avril" },
+  { id: "muses-de-mai-2026", content: "Muses de Mai 2026", panelID: "muses-de-mai-2026" },
+];
 
 type SubmissionRow = {
   id: string;
@@ -33,15 +39,18 @@ function truncate(text: string | null | undefined, max = 120) {
 }
 
 export default function ResponsesPage() {
+  const [campaignIndex, setCampaignIndex] = useState(0);
   const [search, setSearch] = useState("");
   const [segment, setSegment] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("");
   const [rows, setRows] = useState<SubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const campaign = CAMPAIGNS[campaignIndex].id;
+
   function loadRows() {
     const params = new URLSearchParams();
-
+    params.set("campaign", campaign);
     if (search) params.set("search", search);
     if (segment) params.set("segment", segment);
     if (selectedFilter) params.set("selected", selectedFilter);
@@ -64,7 +73,14 @@ export default function ResponsesPage() {
 
   useEffect(() => {
     loadRows();
-  }, [search, segment, selectedFilter]);
+  }, [campaign, search, segment, selectedFilter]);
+
+  function handleCampaignChange(index: number) {
+    setCampaignIndex(index);
+    setSearch("");
+    setSegment("");
+    setSelectedFilter("");
+  }
 
   async function toggleSelection(id: string, selected: boolean) {
     try {
@@ -101,140 +117,144 @@ export default function ResponsesPage() {
   return (
     <Page title="Réponses du quiz">
       <BlockStack gap="400">
-        <Card>
-          <InlineStack align="space-between" blockAlign="center">
-            <Text as="h3" variant="headingMd">
-              {selectedFilter === "true"
-                ? `${selectedCount} sélectionnées`
-                : `${selectedCount} sélectionnées dans la vue courante`}
-            </Text>
-            <Text as="p" tone="subdued">
-              Objectif : 100
-            </Text>
-          </InlineStack>
-        </Card>
+        <Tabs tabs={CAMPAIGNS} selected={campaignIndex} onSelect={handleCampaignChange}>
+          <BlockStack gap="400">
+            <Card>
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h3" variant="headingMd">
+                  {selectedFilter === "true"
+                    ? `${selectedCount} sélectionnées`
+                    : `${selectedCount} sélectionnées dans la vue courante`}
+                </Text>
+                <Text as="p" tone="subdued">
+                  Objectif : 100
+                </Text>
+              </InlineStack>
+            </Card>
 
-        <Card>
-          <InlineStack gap="300" wrap>
-            <div style={{ minWidth: 280 }}>
-              <TextField
-                label="Recherche"
-                labelHidden
-                autoComplete="off"
-                placeholder="Email, prénom, nom"
-                value={search}
-                onChange={setSearch}
-              />
-            </div>
+            <Card>
+              <InlineStack gap="300" wrap>
+                <div style={{ minWidth: 280 }}>
+                  <TextField
+                    label="Recherche"
+                    labelHidden
+                    autoComplete="off"
+                    placeholder="Email, prénom, nom"
+                    value={search}
+                    onChange={setSearch}
+                  />
+                </div>
 
-            <div style={{ minWidth: 240 }}>
-              <Select
-                label="Segment"
-                labelHidden
-                options={[
-                  { label: "Tous les segments", value: "" },
-                  { label: "ULTRA HIGH VALUE", value: "ULTRA HIGH VALUE" },
-                  { label: "HIGH POTENTIAL", value: "HIGH POTENTIAL" },
-                  { label: "MOYEN", value: "MOYEN" },
-                  { label: "FAIBLE", value: "FAIBLE" },
-                ]}
-                value={segment}
-                onChange={setSegment}
-              />
-            </div>
+                <div style={{ minWidth: 240 }}>
+                  <Select
+                    label="Segment"
+                    labelHidden
+                    options={[
+                      { label: "Tous les segments", value: "" },
+                      { label: "ULTRA HIGH VALUE", value: "ULTRA HIGH VALUE" },
+                      { label: "HIGH POTENTIAL", value: "HIGH POTENTIAL" },
+                      { label: "MOYEN", value: "MOYEN" },
+                      { label: "FAIBLE", value: "FAIBLE" },
+                    ]}
+                    value={segment}
+                    onChange={setSegment}
+                  />
+                </div>
 
-            <div style={{ minWidth: 220 }}>
-              <Select
-                label="Sélection"
-                labelHidden
-                options={[
-                  { label: "Toutes", value: "" },
-                  { label: "Sélectionnées", value: "true" },
-                ]}
-                value={selectedFilter}
-                onChange={setSelectedFilter}
-              />
-            </div>
-          </InlineStack>
-        </Card>
+                <div style={{ minWidth: 220 }}>
+                  <Select
+                    label="Sélection"
+                    labelHidden
+                    options={[
+                      { label: "Toutes", value: "" },
+                      { label: "Sélectionnées", value: "true" },
+                    ]}
+                    value={selectedFilter}
+                    onChange={setSelectedFilter}
+                  />
+                </div>
+              </InlineStack>
+            </Card>
 
-        <Card>
-          <BlockStack gap="300">
-            <Text as="h3" variant="headingMd">
-              Candidatures
-            </Text>
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h3" variant="headingMd">
+                  Candidatures
+                </Text>
 
-            {loading ? (
-              <Text as="p" tone="subdued">
-                Chargement…
-              </Text>
-            ) : rows.length === 0 ? (
-              <Text as="p" tone="subdued">
-                Aucune réponse trouvée.
-              </Text>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    minWidth: "1250px",
-                    borderCollapse: "collapse",
-                    fontSize: "14px",
-                  }}
-                >
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #e1e3e5" }}>
-                      <th style={thStyle}>Prénom</th>
-                      <th style={thStyle}>Nom</th>
-                      <th style={thStyle}>Email</th>
-                      <th style={thStyle}>Score</th>
-                      <th style={thStyle}>Segment</th>
-                      <th style={thStyle}>Sélection</th>
-                      <th style={thStyle}>Action</th>
-                      <th style={thStyle}>Q12</th>
-                      <th style={thStyle}>Q15</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, index) => (
-                      <tr
-                        key={`${row.id}-${index}`}
-                        style={{ borderBottom: "1px solid #f1f2f3" }}
-                      >
-                        <td style={tdStyle}>{row.firstname || ""}</td>
-                        <td style={tdStyle}>{row.lastname || ""}</td>
-                        <td style={tdStyle}>{row.email || ""}</td>
-                        <td style={tdStyle}>{row.total_score ?? 0}</td>
-                        <td style={tdStyle}>{row.score_segment || ""}</td>
-                        <td style={tdStyle}>
-                          {row.selected ? (
-                            <Badge tone="success">Sélectionnée</Badge>
-                          ) : (
-                            <Badge>TBD</Badge>
-                          )}
-                        </td>
-                        <td style={tdStyle}>
-                          <Button
-                            size="micro"
-                            onClick={() => toggleSelection(row.id, row.selected)}
+                {loading ? (
+                  <Text as="p" tone="subdued">
+                    Chargement…
+                  </Text>
+                ) : rows.length === 0 ? (
+                  <Text as="p" tone="subdued">
+                    Aucune réponse trouvée.
+                  </Text>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        minWidth: "1250px",
+                        borderCollapse: "collapse",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid #e1e3e5" }}>
+                          <th style={thStyle}>Prénom</th>
+                          <th style={thStyle}>Nom</th>
+                          <th style={thStyle}>Email</th>
+                          <th style={thStyle}>Score</th>
+                          <th style={thStyle}>Segment</th>
+                          <th style={thStyle}>Sélection</th>
+                          <th style={thStyle}>Action</th>
+                          <th style={thStyle}>Q12</th>
+                          <th style={thStyle}>Q15</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, index) => (
+                          <tr
+                            key={`${row.id}-${index}`}
+                            style={{ borderBottom: "1px solid #f1f2f3" }}
                           >
-                            {row.selected ? "Retirer" : "Sélectionner"}
-                          </Button>
-                        </td>
-                        <td style={tdStyle} title={row.q12 || ""}>
-                          {truncate(row.q12, 140)}
-                        </td>
-                        <td style={tdStyle} title={row.q15 || ""}>
-                          {truncate(row.q15, 140)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                            <td style={tdStyle}>{row.firstname || ""}</td>
+                            <td style={tdStyle}>{row.lastname || ""}</td>
+                            <td style={tdStyle}>{row.email || ""}</td>
+                            <td style={tdStyle}>{row.total_score ?? 0}</td>
+                            <td style={tdStyle}>{row.score_segment || ""}</td>
+                            <td style={tdStyle}>
+                              {row.selected ? (
+                                <Badge tone="success">Sélectionnée</Badge>
+                              ) : (
+                                <Badge>TBD</Badge>
+                              )}
+                            </td>
+                            <td style={tdStyle}>
+                              <Button
+                                size="micro"
+                                onClick={() => toggleSelection(row.id, row.selected)}
+                              >
+                                {row.selected ? "Retirer" : "Sélectionner"}
+                              </Button>
+                            </td>
+                            <td style={tdStyle} title={row.q12 || ""}>
+                              {truncate(row.q12, 140)}
+                            </td>
+                            <td style={tdStyle} title={row.q15 || ""}>
+                              {truncate(row.q15, 140)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </BlockStack>
+            </Card>
           </BlockStack>
-        </Card>
+        </Tabs>
       </BlockStack>
     </Page>
   );
