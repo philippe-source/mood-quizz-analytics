@@ -15,6 +15,7 @@ import {
 const CAMPAIGNS = [
   { id: "cercle-100-avril", content: "Cercle 100 — Avril 2026", panelID: "cercle-100-avril" },
   { id: "muses-mai-2026", content: "Muses de Mai 2026", panelID: "muses-mai-2026" },
+  { id: "mood-ton-diagnostic-offert", content: "Mood Anonymes", panelID: "mood-ton-diagnostic-offert" },
 ];
 
 type SubmissionRow = {
