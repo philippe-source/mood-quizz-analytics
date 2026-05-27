@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Badge,
   Banner,
@@ -13,9 +13,18 @@ import {
   Modal,
   Page,
   SkeletonBodyText,
+  Tag,
   Tabs,
   Text,
+  TextField,
 } from "@shopify/polaris";
+
+type Product = {
+  id: string;
+  title: string;
+  handle: string;
+  url: string;
+};
 
 type Compo = {
   id: string;
@@ -26,6 +35,7 @@ type Compo = {
   image_url: string;
   approved: boolean;
   created_at: string;
+  products: Product[] | null;
 };
 
 type ApiData = {
@@ -62,6 +72,79 @@ function CompoPhoto({ src, alt, onZoom }: { src: string; alt: string; onZoom: ()
         (e.target as HTMLImageElement).style.minHeight = "120px";
       }}
     />
+  );
+}
+
+function ProductSearch({ compoId, initialProducts }: { compoId: string; initialProducts: Product[] }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Product[]>([]);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleQueryChange(val: string) {
+    setQuery(val);
+    if (timer.current) clearTimeout(timer.current);
+    if (!val.trim()) { setResults([]); return; }
+    timer.current = setTimeout(async () => {
+      const r = await fetch(`/app/api/mood-lovers-products?q=${encodeURIComponent(val)}`);
+      const d = await r.json();
+      setResults(d.products ?? []);
+    }, 350);
+  }
+
+  async function save(next: Product[]) {
+    await fetch("/app/api/mood-lovers-products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ compoId, products: next }),
+    });
+  }
+
+  function addProduct(p: Product) {
+    if (products.find((x) => x.id === p.id)) return;
+    const next = [...products, p];
+    setProducts(next);
+    setQuery("");
+    setResults([]);
+    save(next);
+  }
+
+  function removeProduct(id: string) {
+    const next = products.filter((p) => p.id !== id);
+    setProducts(next);
+    save(next);
+  }
+
+  return (
+    <BlockStack gap="200">
+      {products.length > 0 && (
+        <InlineStack gap="100" wrap>
+          {products.map((p) => (
+            <Tag key={p.id} onRemove={() => removeProduct(p.id)}>
+              <a href={p.url} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
+                {p.title}
+              </a>
+            </Tag>
+          ))}
+        </InlineStack>
+      )}
+      <TextField
+        label="Lier un produit"
+        value={query}
+        onChange={handleQueryChange}
+        placeholder="Rechercher par titre…"
+        autoComplete="off"
+      />
+      {results.length > 0 && query && (
+        <BlockStack gap="100">
+          {results.map((p) => (
+            <Button key={p.id} variant="plain" textAlign="left" onClick={() => addProduct(p)} fullWidth>
+              {p.title}
+            </Button>
+          ))}
+        </BlockStack>
+      )}
+    </BlockStack>
   );
 }
 
@@ -200,6 +283,7 @@ export default function MoodLoversPage() {
                       )}
                       <Text variant="bodySm" as="p" tone="subdued">{formatDate(c.created_at)}</Text>
                     </BlockStack>
+                    <ProductSearch compoId={c.id} initialProducts={c.products ?? []} />
                     <InlineStack gap="200">
                       <Box width="50%">
                         <Button
@@ -258,6 +342,7 @@ export default function MoodLoversPage() {
                         <Text variant="bodySm" as="p">{c.description}</Text>
                       )}
                     </BlockStack>
+                    <ProductSearch compoId={c.id} initialProducts={c.products ?? []} />
                     <Button
                       variant="secondary"
                       tone="critical"
