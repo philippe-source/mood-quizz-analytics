@@ -82,7 +82,7 @@ export default function MoodLoversPage() {
     load();
   }, [load]);
 
-  async function act(id: string, action: "approve" | "reject") {
+  async function act(id: string, action: "approve" | "reject" | "unpublish") {
     setActing(id);
     await fetch("/app/api/mood-lovers", {
       method: "POST",
@@ -253,6 +253,15 @@ export default function MoodLoversPage() {
                         <Text variant="bodySm" as="p">{c.description}</Text>
                       )}
                     </BlockStack>
+                    <Button
+                      variant="secondary"
+                      tone="critical"
+                      loading={acting === c.id}
+                      onClick={() => act(c.id, "unpublish")}
+                      fullWidth
+                    >
+                      Dépublier
+                    </Button>
                   </BlockStack>
                 </Card>
               ))}

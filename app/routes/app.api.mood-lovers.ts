@@ -60,6 +60,12 @@ export async function action({ request }: ActionFunctionArgs) {
         body: JSON.stringify({ approved: true }),
       });
       if (!r.ok) throw new Error(await r.text());
+    } else if (action === "unpublish") {
+      const r = await supa(`compos?id=eq.${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ approved: false }),
+      });
+      if (!r.ok) throw new Error(await r.text());
     } else if (action === "reject") {
       const r = await supa(`compos?id=eq.${id}`, { method: "DELETE" });
       if (!r.ok) throw new Error(await r.text());
