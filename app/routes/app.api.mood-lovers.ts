@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { json } from "react-router";
 import { authenticate } from "../shopify.server";
 
 const SUPA_URL = process.env.MOODLOVERS_SUPA_URL!;
@@ -18,7 +17,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await authenticate.admin(request);
 
   if (!SUPA_URL || !SUPA_KEY) {
-    return json(
+    return Response.json(
       { error: "MOODLOVERS_SUPA_URL et MOODLOVERS_SUPA_SERVICE_KEY manquants dans les variables d'environnement." },
       { status: 500 }
     );
@@ -43,9 +42,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       });
     }
 
-    return json({ pending, approved, voteCounts });
+    return Response.json({ pending, approved, voteCounts });
   } catch (e) {
-    return json({ error: (e as Error).message }, { status: 500 });
+    return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }
 
@@ -65,11 +64,11 @@ export async function action({ request }: ActionFunctionArgs) {
       const r = await supa(`compos?id=eq.${id}`, { method: "DELETE" });
       if (!r.ok) throw new Error(await r.text());
     } else {
-      return json({ error: "Action inconnue." }, { status: 400 });
+      return Response.json({ error: "Action inconnue." }, { status: 400 });
     }
 
-    return json({ ok: true });
+    return Response.json({ ok: true });
   } catch (e) {
-    return json({ error: (e as Error).message }, { status: 500 });
+    return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }
