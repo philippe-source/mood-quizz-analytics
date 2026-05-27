@@ -10,6 +10,7 @@ import {
   EmptyState,
   InlineGrid,
   InlineStack,
+  Modal,
   Page,
   SkeletonBodyText,
   Tabs,
@@ -42,17 +43,19 @@ function formatDate(iso: string) {
   });
 }
 
-function CompoPhoto({ src, alt }: { src: string; alt: string }) {
+function CompoPhoto({ src, alt, onZoom }: { src: string; alt: string; onZoom: () => void }) {
   return (
     <img
       src={src}
       alt={alt}
+      onClick={onZoom}
       style={{
         width: "100%",
         aspectRatio: "1",
         objectFit: "cover",
         borderRadius: "8px",
         display: "block",
+        cursor: "zoom-in",
       }}
       onError={(e) => {
         (e.target as HTMLImageElement).style.background = "#F5ECD9";
@@ -67,6 +70,7 @@ export default function MoodLoversPage() {
   const [loading, setLoading] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
   const [acting, setActing] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -159,6 +163,7 @@ export default function MoodLoversPage() {
   }
 
   return (
+    <>
     <Page
       title="Mood Lovers · Galerie"
       subtitle={`${totalAll} soumissions · ${approved.length} publiées · ${totalVotes} votes`}
@@ -183,7 +188,7 @@ export default function MoodLoversPage() {
               {pending.map((c) => (
                 <Card key={c.id}>
                   <BlockStack gap="300">
-                    <CompoPhoto src={c.image_url} alt={c.name} />
+                    <CompoPhoto src={c.image_url} alt={c.name} onZoom={() => setLightbox({ src: c.image_url, alt: c.name })} />
                     <BlockStack gap="100">
                       <Text variant="bodyMd" as="p" fontWeight="semibold">{c.name}</Text>
                       <Text variant="bodySm" as="p" tone="subdued">📍 {c.city}</Text>
@@ -242,7 +247,7 @@ export default function MoodLoversPage() {
               {approved.map((c) => (
                 <Card key={c.id}>
                   <BlockStack gap="300">
-                    <CompoPhoto src={c.image_url} alt={c.name} />
+                    <CompoPhoto src={c.image_url} alt={c.name} onZoom={() => setLightbox({ src: c.image_url, alt: c.name })} />
                     <BlockStack gap="100">
                       <InlineStack align="space-between" blockAlign="center">
                         <Text variant="bodyMd" as="p" fontWeight="semibold">{c.name}</Text>
@@ -330,5 +335,23 @@ export default function MoodLoversPage() {
         )}
       </BlockStack>
     </Page>
+
+    {lightbox && (
+      <Modal
+        open
+        onClose={() => setLightbox(null)}
+        title={lightbox.alt}
+        size="large"
+      >
+        <Modal.Section>
+          <img
+            src={lightbox.src}
+            alt={lightbox.alt}
+            style={{ width: "100%", borderRadius: "8px", display: "block" }}
+          />
+        </Modal.Section>
+      </Modal>
+    )}
+  </>
   );
 }
